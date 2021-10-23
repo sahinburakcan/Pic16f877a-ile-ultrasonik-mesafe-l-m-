@@ -1,0 +1,68 @@
+#include<16f877a.h>
+#fusesXT,NOWDT,NOPROTECT,NOBROWNOUT,NOLVP,NOPUT,NOWRT,NODEBUG,NOCPD
+#usedelay(clock=4000000)
+#usefast_io(c)
+void main()
+{
+setup_psp(PSP_DISABLED);
+setup_timer_1(T1_INTERNAL | T1_DIV_BY_1); //timer1 1:1 oranında çalışacak şekilde ayarlanır
+setup_timer_2(T2_DISABLED,0,1);
+setup_adc_ports(NO_ANALOGS);
+setup_adc(ADC_OFF);
+setup_CCP1(CCP_OFF);
+setup_CCP2(CCP_OFF);
+intc,i;
+floata,b,d;
+set_tris_c(0x00); // c portu çıkış olarak belirlenir
+output_c(0x00); // c portunun içeriği sıfırlanır
+output_low(pin_c0);
+a=0;
+c=0;
+while(1)
+{
+output_high(pin_c0); //hc-sr04ün triggerpini 15us lojik 1 yapılır
+delay_us(15);
+output_low(pin_c0);
+while(!(input(pin_c1))) // echopinin lojik 1 olması beklenir
+{}
+set_timer1(0);
+while((input(pin_c1))) // echopinin lojik 0 olması beklenir
+{}
+c=get_timer1();
+a=c/58; // formülden x=t/29 bulunur ses burada hem gidiş hem geliş yaptığı için 29*2=58 olur
+i=0; // mesafe karşılaştırılması için değişkemler tanımlanır
+b=0;
+c=0;
+if(i==0)
+{b=a;
+i=i+1;}
+if(i==1)
+{d=a;
+i=0;}
+if(b<d) // uzaklaşma için kontrol yapılır
+{output_high(pin_c2);
+delay_ms(500);
+output_low(pin_c2);
+delay_ms(500);
+output_high(pin_c2);
+delay_ms(500);
+output_low(pin_c2);}
+elseif(b==d) // sabit kalma için kontrol yapılır
+{output_high(pin_c3);
+delay_ms(500);
+output_low(pin_c3);
+delay_ms(500);
+output_high(pin_c3);
+delay_ms(500);
+output_low(pin_c3); }
+if(b>d) // yakınlaşma için kontrol yapılır
+{output_high(pin_c4);
+delay_ms(500);
+output_low(pin_c4);
+delay_ms(500);
+output_high(pin_c4);
+delay_ms(500);
+output_low(pin_c4);
+}
+}
+}
